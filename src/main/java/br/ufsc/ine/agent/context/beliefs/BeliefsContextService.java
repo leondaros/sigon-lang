@@ -76,7 +76,6 @@ public class BeliefsContextService implements ContextService {
 			} catch (Exception e){
 				e.printStackTrace();
 			}
-
 		}
 
 		try {

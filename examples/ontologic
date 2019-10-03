@@ -1,0 +1,9 @@
+communication:
+	sensor("answerSensor", "sensor.AnswerSensor").
+	actuator("buildQuestion", "actuator.BuildQuestion").
+	actuator("persist", "actuator.PersistBelief").
+	
+belief:
+	florianopolis.
+	
+planner:
