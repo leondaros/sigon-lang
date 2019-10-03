@@ -1,6 +1,9 @@
-# agent-project
+# Sigon Language
 
-## Ambiente de desenvolvimento
+Sigon is a framework for the development of agents as multi-context systems. It is generic and extensible, in the sense that it allows modeling agents according to existing architectures or to create new ones, as well as to extend an agent construction with additional features through other contexts and bridge rules.
+
+## Environment
+
 
 Para manter e desenvolver o projeto é necessário ter as seguintes tecnologias instaladas:
 
@@ -37,5 +40,22 @@ Após a geração basta entrar na pasta target e executar o comando para rodar o
 ```sh
  java -jar agent-parser-jar-with-dependencies.jar filename 
 ```
+
+## Como contribuir 
+
+
+### Com código
+
+1. Crie um fork do master
+2. Implemente uma atualização
+3. Seja descritivo nos commits. Se for de uma issue, coloque o número
+4. Faça pull request para o branch Master
+
+### Com ideias
+
+1. Crie uma issue com etiqueta
+
+
+
 
 

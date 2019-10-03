@@ -3,9 +3,12 @@ communication:
 	
 beliefs:
 	proposition.
+<<<<<<< HEAD
 
 planner:
 	plan(something, [action(asd(as), _, _)], a,b).
+=======
+>>>>>>> acb83fe165509c81160dcc8331564e54c60acc7d
 	
 !beliefs a :- communication X.
 !beliefs a(a) :- communication X.

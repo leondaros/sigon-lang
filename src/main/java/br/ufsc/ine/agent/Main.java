@@ -49,7 +49,7 @@ public class Main {
 			ContextService[] cc = new ContextService[] {ontologicContextService};
 			
 			Agent agent = new Agent();
-			agent.run(agentWalker);
+			agent.run(agentWalker,cc);
 
 		} catch (IOException e) {
 			System.out.println("I/O exception.");

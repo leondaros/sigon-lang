@@ -43,7 +43,7 @@ logicalContextName
 	;
 
 primitiveContextName
-	: 'beliefs' | 'desires' | 'intentions'
+	: 'beliefs' | 'desires' | 'intentions' 
 	;
 
 customContextName
@@ -175,7 +175,7 @@ head
 
 body
 	: negation? contextName   ((term | negation? VARIABLE) | plan)
-((AND | OR) negation?  contextName   ((term | negation? VARIABLE) | plan))*
+(logicalOperator negation?  contextName   ((term | negation? VARIABLE) | plan))*
 	;
 
 
@@ -183,7 +183,7 @@ body
 
 term
 	:  negation? CONSTANT ( annotation | (LeftParen atom (',' atom )* RightParen) annotation?)? 
-	| term (AND | OR) term
+	| term (logicalOperator) term
 	| ('[' term (',' term)* ']')
 	| term ':-' term
 	;
@@ -220,6 +220,12 @@ gradedValue
 cost
     : '0.' NUMERAL
     ;
+    
+    
+    
+logicalOperator
+	: AND | OR;
+	
 NUMERAL
 	: DIGIT+
 	;
@@ -255,26 +261,43 @@ RightParen : ')';
 STRING
 	:
     '"' (~["\\\r\n])* '"';
+
+
+
+
+
 fragment ALPHA:
 	LCLETTER | UCLETTER
 	;
+
+
+
+
 fragment CHARACTER
     : LCLETTER | UCLETTER | DIGIT
     ;
+
 fragment LCLETTER
     : [a-z_];
+
 fragment UCLETTER
     : [A-Z];
+
 fragment DIGIT
     : [0-9];
+
 WS
    : [ \t\r\n] -> skip
 ;
+
+
 BlockComment
     : '/*' .*? '*/' -> skip
     ;
+
 LineComment
     :   '//' ~[\r\n]*
         -> skip
 ;
+    
     

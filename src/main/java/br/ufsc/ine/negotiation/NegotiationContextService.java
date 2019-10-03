@@ -1,4 +1,4 @@
-package br.ufsc.ine.agent.context.beliefs;
+package br.ufsc.ine.negotiation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,23 +14,29 @@ import br.ufsc.ine.agent.context.ContextService;
 import br.ufsc.ine.agent.context.LangContext;
 import br.ufsc.ine.utils.PrologEnvironment;
 
-public class BeliefsContextService implements ContextService {
+public class NegotiationContextService implements ContextService {
 
-	private static BeliefsContextService instance = new BeliefsContextService();
+	private static NegotiationContextService instance = new NegotiationContextService();
 	private static PrologEnvironment prologEnvironment;
-	private List<LangContext> beliefs = new ArrayList<>();
-	private BeliefsContextService() {
+	// estratégias -> ações (plano)
+	// ações (protocolo) (provavelmente será alterado)
+	private List<LangContext> strategies = new ArrayList<>();
+
+	private NegotiationContextService() {
 		prologEnvironment = new PrologEnvironment();
 	}
-	public static BeliefsContextService getInstance() {
+
+	public static NegotiationContextService getInstance() {
 		return instance;
 	}
-	
-	
 
-	public void beliefs(List<LangContext> beliefs) {
-		this.beliefs = beliefs;
-		List<String> clauses = beliefs.stream().map(c -> c.getClauses()).flatMap(l -> l.stream())
+	public List<LangContext> strategies() {
+		return strategies;
+	}
+
+	public void negotiation(List<LangContext> strategies) {
+		this.strategies = strategies;
+		List<String> clauses = strategies.stream().map(c -> c.getClauses()).flatMap(l -> l.stream())
 
 				.collect(Collectors.toList());
 
@@ -43,19 +49,6 @@ public class BeliefsContextService implements ContextService {
 		});
 
 	}
-
-	public int size() {
-		return prologEnvironment.getSize();
-	}
-
-	public List<LangContext> getBeliefs() {
-		return beliefs;
-	}
-
-
-
-
-
 
 	@Override
 	public boolean verify(String fact) {
@@ -70,33 +63,33 @@ public class BeliefsContextService implements ContextService {
 
 	@Override
 	public void appendFact(String c) {
-		//TODO: refactor code (This may appear in other place).
-		if(c.startsWith("-")){
-            c = c.replace("-","").trim();
-            Agent.removeBelief = true;
-        } 
-		if(Agent.removeBelief){
+		if (c.startsWith("-")) {
+			c = c.replace("-", "").trim();
+			Agent.removeBelief = true;
+		}
+		if (Agent.removeBelief) {
 			Agent.removeBelief = false;
 			try {
 				prologEnvironment.removeFact(c);
 				return;
-			} catch (Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
 		}
 
 		try {
 			boolean update = false;
 			String toTest = null;
 
-			if(c.trim().endsWith(").")){
+			if (c.trim().endsWith(").")) {
 				StringBuilder builder = new StringBuilder();
-				String toReplace = c.substring(c.indexOf("(")+1, c.lastIndexOf(")"));
-				Arrays.stream(toReplace.split(",")).map( i-> "_,").forEach(builder::append);
+				String toReplace = c.substring(c.indexOf("(") + 1, c.lastIndexOf(")"));
+				Arrays.stream(toReplace.split(",")).map(i -> "_,").forEach(builder::append);
 				StringBuilder test = new StringBuilder();
 				test.append(c.substring(0, c.indexOf("(")));
 				test.append("(");
-				test.append(builder.toString().substring(0,builder.toString().length()-1));
+				test.append(builder.toString().substring(0, builder.toString().length() - 1));
 				test.append(").");
 				toTest = test.toString();
 
@@ -104,21 +97,20 @@ public class BeliefsContextService implements ContextService {
 						|| (!c.startsWith("\\+") && this.verify("\\+" + toTest))
 						|| this.verify(toTest.replace("\\+", ""));
 
-
-			} else if(!c.trim().endsWith(").") && (c.startsWith("\\+") || this.verify("\\+" + c))  ){
-				if(!c.startsWith("\\+") && verify("\\+"+c)){
+			} else if (!c.trim().endsWith(").") && (c.startsWith("\\+") || this.verify("\\+" + c))) {
+				if (!c.startsWith("\\+") && verify("\\+" + c)) {
 					toTest = c;
 					update = true;
-				} else if(c.startsWith("\\+")) {
+				} else if (c.startsWith("\\+")) {
 					String test = c.substring(2);
-					if(this.verify(test)){
+					if (this.verify(test)) {
 						toTest = test;
 						update = true;
 					}
 				}
 			}
 
-			if(update){
+			if (update) {
 				prologEnvironment.updateFact(c, toTest);
 			} else {
 				prologEnvironment.appendFact(c);
@@ -126,20 +118,42 @@ public class BeliefsContextService implements ContextService {
 		} catch (InvalidTheoryException e) {
 			e.printStackTrace();
 		}
-	}
 
-	@Override
-	public Theory getTheory(){
-		return prologEnvironment.getEngine().getTheory();
-	}
-
-	@Override
-	public String getName() {
-		return "bc";
 	}
 
 	@Override
 	public void addInitialFact(String fact) throws InvalidTheoryException {
 		prologEnvironment.appendFact(fact);
 	}
+
+	@Override
+	public String getName() {
+		return "negotiation";
+	}
+
+	@Override
+	public Theory getTheory() {
+		return prologEnvironment.getEngine().getTheory();
+	}
+	
+	public String getStrategy(String type) {
+		String[] theories = getTheory().toString().split("\n");
+		for (String string : theories) {
+			if(string.indexOf(type) != -1) {
+				return string;
+			}
+		}
+		return null;
+	}
+	
+	public void initUrgency() {
+		
+	}
+	
+	
+	
+	
+	
+	
+
 }
