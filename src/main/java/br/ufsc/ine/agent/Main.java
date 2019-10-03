@@ -10,6 +10,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import agent.AgentLexer;
 import agent.AgentParser;
+import br.ufsc.ine.agent.context.ContextService;
+import br.ufsc.ine.agent.context.ontologic.OntologicContextService;
 import br.ufsc.ine.parser.AgentWalker;
 import br.ufsc.ine.parser.VerboseListener;
 
@@ -41,10 +43,11 @@ public class Main {
 			ParseTreeWalker walker = new ParseTreeWalker();
 
 			AgentWalker agentWalker = new AgentWalker();
-
 			walker.walk(agentWalker, tree);
 
-
+			OntologicContextService ontologicContextService = OntologicContextService.getInstance();
+			ContextService[] cc = new ContextService[] {ontologicContextService};
+			
 			Agent agent = new Agent();
 			agent.run(agentWalker);
 

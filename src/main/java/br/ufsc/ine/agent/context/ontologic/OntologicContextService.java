@@ -8,6 +8,7 @@ import alice.tuprolog.MalformedGoalException;
 import alice.tuprolog.SolveInfo;
 import alice.tuprolog.Theory;
 import br.ufsc.ine.agent.context.ContextService;
+import br.ufsc.ine.agent.context.LangContext;
 import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlObject;
 import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlResult;
 import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlSearch;
@@ -43,6 +44,18 @@ public class OntologicContextService implements ContextService{
 		} catch (MalformedGoalException e) {
 			return false;
 		}
+	}
+	
+	public void ontologic(List<LangContext> langContexts) {
+		langContexts.forEach(ctx -> {
+			ctx.getClauses().forEach(clause -> {
+				try {
+					this.addInitialFact(clause);
+				} catch (InvalidTheoryException e) {
+					e.printStackTrace();
+				}
+			});
+		});
 	}
 
 	@Override
