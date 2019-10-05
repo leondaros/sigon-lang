@@ -42,6 +42,7 @@ public class OntologicContextService implements ContextService{
 			solveGoal = prologEnvironment.solveGoal(fact);
 			return solveGoal.isSuccess();
 		} catch (MalformedGoalException e) {
+			System.out.println(fact+" malformed");
 			return false;
 		}
 	}
@@ -60,8 +61,20 @@ public class OntologicContextService implements ContextService{
 
 	@Override
 	public void appendFact(String fact) {
-		String subject,object = "";
-		subject = getURI(fact);
+		String subject = "",object = "";
+//		subject = getURI(fact);
+		boolean update = this.verify(fact+".");
+		if(subject=="") {
+			try {
+				if (update) {
+					prologEnvironment.updateFact(fact+".", fact+".");
+				} else {
+					prologEnvironment.appendFact(fact);
+				}
+			} catch (InvalidTheoryException e) {
+				e.printStackTrace();
+			}
+		}else if(this.verify(fact+".")){
 		for (String predicate : mappedPredicates) {
 			List<SparqlResult> result = executeQuery("<"+subject+">", predicate, "?value");
 			if (!result.isEmpty()) {
@@ -78,12 +91,12 @@ public class OntologicContextService implements ContextService{
 	            }
 				String newFact = formatPredicate(predicate)+"("+fact+","+object+")";
 				try {
-					prologEnvironment.appendFact(newFact);
+						prologEnvironment.appendFact(newFact);
 				} catch (InvalidTheoryException e) {
 					e.printStackTrace();
 				}
 	        }
-		}
+		}}
 	}
 	
 	public List<SparqlResult> getWrongAnswer(){
@@ -91,9 +104,12 @@ public class OntologicContextService implements ContextService{
 	}
 	
 	public String getURI(String label){
-		this.addObjectToList("?uri", "rdfs:label", ""+label+"");
+		this.addObjectToList("?uri", "rdfs:label", "'"+label+"'@pt");
 		List<SparqlResult> result = this.searchNewURI(sparqlObjects);
-		return result.get(0).getResourceResult().getURI();
+		if (!result.isEmpty()) {
+			return result.get(0).getResourceResult().getURI();
+		}
+		return "";
 	}
 
 	public String formatPredicate(String predicate){
@@ -154,8 +170,9 @@ public class OntologicContextService implements ContextService{
 	}
 	
 	public List<SparqlResult> searchNewURI(List<SparqlObject> objects){
+		List<SparqlResult> result = sparqlSearch.searchDbpedia(objects);
 		clearObjectsList();
-		return sparqlSearch.searchDbpedia(objects);
+		return result;
 	}
 	
 	public List<SparqlResult> executeQuery(String subject,String predicate, String object){
