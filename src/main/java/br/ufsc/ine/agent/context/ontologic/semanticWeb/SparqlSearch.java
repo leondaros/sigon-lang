@@ -33,8 +33,9 @@ public class SparqlSearch {
     private final String DBPEDIA = "PREFIX dbpedia: <http://dbpedia.org/>";
     private final String SKOS = "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>";
     private final String DBO = "PREFIX dbo: <http://dbpedia.org/ontology/>";
+    private final String GEO = "PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>";
     
-    private final String PREFIXES = OWL + XSD + RDFS + RDF + FOAF + DC + DB + DBPEDIA2 + DBPEDIA + SKOS + DBO;
+    private final String PREFIXES = OWL + XSD + RDFS + RDF + FOAF + DC + DB + DBPEDIA2 + DBPEDIA + SKOS + DBO + GEO;
     
     private final String SERVICE = "SERVICE <http://DBpedia.org/sparql>";
     
@@ -68,8 +69,8 @@ public class SparqlSearch {
         //Cria a query sparql.
         Query queryExec = QueryFactory.create(query);
         //Prepara a execu��o da query sparql.
-//        QueryExecution qe = QueryExecutionFactory.create(queryExec, new DatasetImpl(ModelFactory.createDefaultModel()));
-        QueryExecution qe = QueryExecutionFactory.create(queryExec, new DatasetImpl(ModelFactory.createOntologyModel()));
+        QueryExecution qe = QueryExecutionFactory.create(queryExec, new DatasetImpl(ModelFactory.createDefaultModel()));
+//        QueryExecution qe = QueryExecutionFactory.create(queryExec, new DatasetImpl(ModelFactory.createOntologyModel()));
         //Executa a query e obt�m o ResultSet como resultado
         ResultSet rs = qe.execSelect();
         
@@ -93,14 +94,14 @@ public class SparqlSearch {
                 try {
                     sr.setResourceResult(sol.getResource(variable));
                 } catch (ClassCastException e) {
-                	System.out.println(e);
+//                	System.out.println(e);
                 }
                 
                 //Verifica se o retorno foi um Literal
                 try {
                     sr.setLiteralResult(sol.getLiteral(variable));
                 } catch (ClassCastException e) { 
-                	System.out.println(e);
+//                	System.out.println(e);
                 }
                 
                 //Define a vari�vel respons�vel por este retorno

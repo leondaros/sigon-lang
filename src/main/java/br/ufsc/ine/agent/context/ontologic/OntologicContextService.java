@@ -13,6 +13,7 @@ import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlObject;
 import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlResult;
 import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlSearch;
 import br.ufsc.ine.utils.PrologEnvironment;
+import java.text.Normalizer;
 
 public class OntologicContextService implements ContextService{
 	
@@ -62,41 +63,44 @@ public class OntologicContextService implements ContextService{
 	@Override
 	public void appendFact(String fact) {
 		String subject = "",object = "";
-//		subject = getURI(fact);
-		boolean update = this.verify(fact+".");
-		if(subject=="") {
-			try {
-				if (update) {
-					prologEnvironment.updateFact(fact+".", fact+".");
-				} else {
-					prologEnvironment.appendFact(fact);
-				}
-			} catch (InvalidTheoryException e) {
-				e.printStackTrace();
+		boolean update = false;
+		subject = getURI(fact);
+		if(subject!=""){
+			for (String predicate : mappedPredicates) {
+				List<SparqlResult> result = executeQuery("<"+subject+">", predicate, "?value", null);
+				if (!result.isEmpty()) {
+		            for (SparqlResult sr : result) {
+		            	if(sr.getResourceResult()!=null){
+		            		
+		            		//ADICIONAR ESTE RESOURCE AS INTENTIONS
+		            		
+		            		object = getResourceLabel(sr.getResourceResult().getURI());
+		            	}
+		            	if(sr.getLiteralResult()!=null){
+		            		object = sr.getLiteralResult().getString();
+		            	}
+		            }
+					String newFact = formatPredicate(predicate)+"("+stripFormat(fact)+","+stripFormat(object)+").";
+					try {
+						update = this.verify(newFact);
+						if (update) {
+							prologEnvironment.updateFact(newFact, newFact);
+						} else {
+							prologEnvironment.appendFact(newFact);
+						}
+					} catch (InvalidTheoryException e) {
+						e.printStackTrace();
+					}
+		        }
 			}
-		}else if(this.verify(fact+".")){
-		for (String predicate : mappedPredicates) {
-			List<SparqlResult> result = executeQuery("<"+subject+">", predicate, "?value");
-			if (!result.isEmpty()) {
-	            for (SparqlResult sr : result) {
-	            	if(sr.getResourceResult()!=null){
-	            		
-	            		//ADICIONAR ESTE RESOURCE AS INTENTIONS
-	            		
-	            		object = getResourceLabel(sr.getResourceResult().getURI()).toString();
-	            	}
-	            	if(sr.getLiteralResult()!=null){
-	            		object = sr.getLiteralResult().getString();
-	            	}
-	            }
-				String newFact = formatPredicate(predicate)+"("+fact+","+object+")";
-				try {
-						prologEnvironment.appendFact(newFact);
-				} catch (InvalidTheoryException e) {
-					e.printStackTrace();
-				}
-	        }
-		}}
+		}
+	}
+	
+	public static String stripFormat(String s) {
+	    s = Normalizer.normalize(s, Normalizer.Form.NFD);
+	    s = s.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
+	    s = s.replaceAll("\\s","_");
+	    return s;
 	}
 	
 	public List<SparqlResult> getWrongAnswer(){
@@ -104,10 +108,15 @@ public class OntologicContextService implements ContextService{
 	}
 	
 	public String getURI(String label){
-		this.addObjectToList("?uri", "rdfs:label", "'"+label+"'@pt");
+		label = label.substring(0,1).toUpperCase() + label.substring(1).toLowerCase();
+		this.addObjectToList("?uri", "rdfs:label", "'"+label+"'@pt",null);
 		List<SparqlResult> result = this.searchNewURI(sparqlObjects);
 		if (!result.isEmpty()) {
-			return result.get(0).getResourceResult().getURI();
+			for (SparqlResult sparqlResult : result) {
+				if(!sparqlResult.getResourceResult().getURI().contains("wikidata")){
+					return sparqlResult.getResourceResult().getURI();
+				}
+			}
 		}
 		return "";
 	}
@@ -116,9 +125,9 @@ public class OntologicContextService implements ContextService{
 		return predicate.substring(predicate.lastIndexOf(":") + 1);
 	}
 	
-	public SparqlResult getResourceLabel(String subject){
-		this.addObjectToList("<"+subject+">", "rdfs:label", "?label");
-		return this.searchNewURI(sparqlObjects).get(0);
+	public String getResourceLabel(String subject){
+		this.addObjectToList("<"+subject+">", "rdfs:label", "?label","FILTER (lang(?label) = 'en')");
+		return this.searchNewURI(sparqlObjects).get(0).getLiteralResult().getString();
 	}
 	
 	@Override
@@ -152,8 +161,8 @@ public class OntologicContextService implements ContextService{
 		mappedPredicates.add("dbo:currency");
 		mappedPredicates.add("dbo:officialLanguage");
 		mappedPredicates.add("dbo:largestCity");
-		
-		//How Many
+//		
+//		//How Many
 		mappedPredicates.add("dbo:populationalTotal");
 	}
 	
@@ -161,11 +170,12 @@ public class OntologicContextService implements ContextService{
 		sparqlObjects.clear();
 	}
 	
-	public void addObjectToList(String subject,String predicate, String object){
+	public void addObjectToList(String subject,String predicate, String object, String filter){
 		SparqlObject triple = new SparqlObject();
 		triple.setUri(subject);
 		triple.setPredicate(predicate);
 		triple.setObject(object);
+		triple.setFilter(filter);
 		sparqlObjects.add(triple);
 	}
 	
@@ -175,8 +185,8 @@ public class OntologicContextService implements ContextService{
 		return result;
 	}
 	
-	public List<SparqlResult> executeQuery(String subject,String predicate, String object){
-		addObjectToList(subject, predicate, object);
+	public List<SparqlResult> executeQuery(String subject,String predicate, String object, String filter){
+		addObjectToList(subject, predicate, object, filter);
 		return searchNewURI(getSparqlObjects());
 	}
 
