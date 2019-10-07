@@ -62,41 +62,53 @@ public class OntologicContextService implements ContextService{
 
 	@Override
 	public void appendFact(String fact) {
-		String subject = "",object = "";
-		boolean update = false;
+		String subject = "";
 		subject = getURI(fact);
 		if(subject!=""){
 			for (String predicate : mappedPredicates) {
-				List<SparqlResult> result = executeQuery("<"+subject+">", predicate, "?value", null);
-				if (!result.isEmpty()) {
-		            for (SparqlResult sr : result) {
-		            	if(sr.getResourceResult()!=null){
-		            		
-		            		//ADICIONAR ESTE RESOURCE AS INTENTIONS
-		            		
-		            		object = getResourceLabel(sr.getResourceResult().getURI());
-		            	}
-		            	if(sr.getLiteralResult()!=null){
-		            		object = sr.getLiteralResult().getString();
-		            	}
-		            }
-					String newFact = formatPredicate(predicate)+"("+stripFormat(fact)+","+stripFormat(object)+").";
-					try {
-						update = this.verify(newFact);
-						if (update) {
-							prologEnvironment.updateFact(newFact, newFact);
-						} else {
-							prologEnvironment.appendFact(newFact);
-						}
-					} catch (InvalidTheoryException e) {
-						e.printStackTrace();
-					}
-		        }
+				String newFact = iterateUriInPredicates(fact,subject,predicate);
+				if(newFact!=""){
+					apprendToProlog(newFact);
+				}
 			}
 		}
 	}
 	
-	public static String stripFormat(String s) {
+	public String iterateUriInPredicates(String fact, String subject, String predicate){
+		String object = "";
+		String newFact = "";
+		List<SparqlResult> result = executeQuery("<"+subject+">", predicate, "?value", null);
+		if (!result.isEmpty()){
+            for (SparqlResult sr : result){
+            	if(sr.getResourceResult()!=null){
+            		//ADICIONAR ESTE RESOURCE AS INTENTIONS
+            		object = getResourceLabel(sr.getResourceResult().getURI());
+            	}
+            	if(sr.getLiteralResult()!=null){
+            		object = sr.getLiteralResult().getString();
+            	}
+            }
+			newFact = formatPredicate(predicate)+"("+stringFormat(fact)+","+stringFormat(object)+").";
+        }
+		return newFact;
+	}
+	
+	public void apprendToProlog(String newFact){
+		boolean update = false;
+		try {
+			update = this.verify(newFact);
+			if (update) {
+				prologEnvironment.updateFact(newFact, newFact);
+			} else {
+				prologEnvironment.appendFact(newFact);
+			}
+		} catch (InvalidTheoryException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public String stringFormat(String s) {
+		s = firstCharLowerCase(s);
 	    s = Normalizer.normalize(s, Normalizer.Form.NFD);
 	    s = s.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
 	    s = s.replaceAll("\\s","_");
@@ -107,10 +119,21 @@ public class OntologicContextService implements ContextService{
 		return null;
 	}
 	
+	public List<SparqlResult> searchNewURI(List<SparqlObject> objects){
+		List<SparqlResult> result = sparqlSearch.searchDbpedia(objects);
+		clearObjectsList();
+		return result;
+	}
+	
+	public List<SparqlResult> executeQuery(String subject,String predicate, String object, String filter){
+		addObjectToList(subject, predicate, object, filter);
+		return searchNewURI(getSparqlObjects());
+	}
+	
+	
 	public String getURI(String label){
-		label = label.substring(0,1).toUpperCase() + label.substring(1).toLowerCase();
-		this.addObjectToList("?uri", "rdfs:label", "'"+label+"'@pt",null);
-		List<SparqlResult> result = this.searchNewURI(sparqlObjects);
+		label = firstCharUpperCase(label);
+		List<SparqlResult> result = executeQuery("?uri", "rdfs:label", "'"+label+"'@pt",null);
 		if (!result.isEmpty()) {
 			for (SparqlResult sparqlResult : result) {
 				if(!sparqlResult.getResourceResult().getURI().contains("wikidata")){
@@ -121,6 +144,14 @@ public class OntologicContextService implements ContextService{
 		return "";
 	}
 
+	public String firstCharUpperCase(String label){
+		return label.substring(0,1).toUpperCase() + label.substring(1).toLowerCase();
+	}
+	
+	public String firstCharLowerCase(String label){
+		return label.substring(0,1).toLowerCase() + label.substring(1);
+	}
+	
 	public String formatPredicate(String predicate){
 		return predicate.substring(predicate.lastIndexOf(":") + 1);
 	}
@@ -146,8 +177,8 @@ public class OntologicContextService implements ContextService{
 		//Where
 		mappedPredicates.add("dbo:country");
 		mappedPredicates.add("dbo:isPartOf");
-		mappedPredicates.add("geo:lat");
-		mappedPredicates.add("geo:long");
+//		mappedPredicates.add("geo:lat");
+//		mappedPredicates.add("geo:long");
 		
 		//When
 		mappedPredicates.add("dbo:foundingDate");
@@ -177,17 +208,6 @@ public class OntologicContextService implements ContextService{
 		triple.setObject(object);
 		triple.setFilter(filter);
 		sparqlObjects.add(triple);
-	}
-	
-	public List<SparqlResult> searchNewURI(List<SparqlObject> objects){
-		List<SparqlResult> result = sparqlSearch.searchDbpedia(objects);
-		clearObjectsList();
-		return result;
-	}
-	
-	public List<SparqlResult> executeQuery(String subject,String predicate, String object, String filter){
-		addObjectToList(subject, predicate, object, filter);
-		return searchNewURI(getSparqlObjects());
 	}
 
 	public static OntologicContextService getInstance() {
