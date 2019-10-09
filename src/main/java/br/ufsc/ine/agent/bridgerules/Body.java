@@ -213,7 +213,8 @@ public class Body {
 		String terms = context.getTheory().toString().replaceAll("(.*):-[\\s]*(.*)(,|\\s*;\\s*?[\\s]*)*", "$1:- $2");
 		String[] contextSplit = terms
 				// .replaceAll("_([0-9])*", "_").trim()
-				.replaceAll("\\n\\n", "/").replaceAll("_", "").split("/");
+//				.replaceAll("\\n\\n", "/").replaceAll("_", "").split("/");
+				.replaceAll("\\n\\n", "/").split("/"); //Remoção de replace para utilização de underscore em valores
 
 		// String contextName = context.getName().replaceAll("_", "");
 		String contextName = context.getName();

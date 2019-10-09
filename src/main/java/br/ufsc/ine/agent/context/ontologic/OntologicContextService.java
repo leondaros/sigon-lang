@@ -7,13 +7,26 @@ import alice.tuprolog.InvalidTheoryException;
 import alice.tuprolog.MalformedGoalException;
 import alice.tuprolog.SolveInfo;
 import alice.tuprolog.Theory;
+import br.ufsc.ine.agent.Agent;
+import br.ufsc.ine.agent.bridgerules.Body;
+import br.ufsc.ine.agent.bridgerules.BridgeRule;
+import br.ufsc.ine.agent.bridgerules.Head;
 import br.ufsc.ine.agent.context.ContextService;
 import br.ufsc.ine.agent.context.LangContext;
+import br.ufsc.ine.agent.context.beliefs.BeliefsContextService;
+import br.ufsc.ine.agent.context.communication.CommunicationContextService;
+import br.ufsc.ine.agent.context.desires.DesiresContextService;
+import br.ufsc.ine.agent.context.intentions.IntentionsContextService;
 import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlObject;
 import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlResult;
 import br.ufsc.ine.agent.context.ontologic.semanticWeb.SparqlSearch;
+import br.ufsc.ine.agent.context.plans.PlansContextService;
 import br.ufsc.ine.utils.PrologEnvironment;
 import java.text.Normalizer;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 
 public class OntologicContextService implements ContextService{
 	
@@ -63,7 +76,11 @@ public class OntologicContextService implements ContextService{
 	@Override
 	public void appendFact(String fact) {
 		String subject = "";
-		subject = getURI(fact);
+		String content = getContent(fact);
+		removeNewResourceStatus(content);
+		fact = stringToInputFormat(getContent(fact));
+//		subject = getURI(fact);
+		subject = "http://dbpedia.org/resource/"+fact;
 		if(subject!=""){
 			for (String predicate : mappedPredicates) {
 				String newFact = iterateUriInPredicates(fact,subject,predicate);
@@ -72,6 +89,26 @@ public class OntologicContextService implements ContextService{
 				}
 			}
 		}
+	}
+	
+	public String getContent(String fact){
+		return fact.substring(fact.indexOf("(") + 1, fact.lastIndexOf(")"));
+	}
+	
+	public String encodeString(String value){
+        try {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+	}
+	
+	public String decodeString(String value){
+        try {
+            return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
 	}
 	
 	public String iterateUriInPredicates(String fact, String subject, String predicate){
@@ -83,14 +120,20 @@ public class OntologicContextService implements ContextService{
             	if(sr.getResourceResult()!=null){
             		//ADICIONAR ESTE RESOURCE AS INTENTIONS
             		object = getResourceLabel(sr.getResourceResult().getURI());
+//            		String objectFormated = encodeString(firstCharLowerCase(object));
+            		String objectFormated = stringToOutputFormat(object);
+            		appendNewResource(objectFormated);
             	}
             	if(sr.getLiteralResult()!=null){
             		object = sr.getLiteralResult().getString();
             	}
             }
-			newFact = formatPredicate(predicate)+"("+stringFormat(fact)+","+stringFormat(object)+").";
+			newFact = formatPredicate(predicate)+"("+stringToOutputFormat(fact)+","+stringToOutputFormat(object)+").";
         }
 		return newFact;
+	}
+	public void appendNewResource(String resource){
+		apprendToProlog("newResource("+resource+").");
 	}
 	
 	public void apprendToProlog(String newFact){
@@ -107,11 +150,34 @@ public class OntologicContextService implements ContextService{
 		}
 	}
 	
-	public String stringFormat(String s) {
+	public void removeNewResourceStatus(String c){
+		String removedFact = "newResource("+c+")";
+		if (prologEnvironment.getEngine().getTheory().toString().contains(removedFact)) {
+//			c = c.replace("-", "").trim();
+			Agent.removeBelief = true;
+		}
+		if (Agent.removeBelief) {
+			Agent.removeBelief = false;
+			try {
+				prologEnvironment.removeFact(removedFact);
+				return;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public String stringToOutputFormat(String s) {
 		s = firstCharLowerCase(s);
 	    s = Normalizer.normalize(s, Normalizer.Form.NFD);
 	    s = s.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
 	    s = s.replaceAll("\\s","_");
+	    return s;
+	}
+	
+	public String stringToInputFormat(String s) {
+		s = firstCharUpperCase(s);
+//	    s = s.replaceAll("_"," ");
 	    return s;
 	}
 	
@@ -132,8 +198,7 @@ public class OntologicContextService implements ContextService{
 	
 	
 	public String getURI(String label){
-		label = firstCharUpperCase(label);
-		List<SparqlResult> result = executeQuery("?uri", "rdfs:label", "'"+label+"'@pt",null);
+		List<SparqlResult> result = executeQuery("?uri", "rdfs:label", "'"+label+"'@en",null);
 		if (!result.isEmpty()) {
 			for (SparqlResult sparqlResult : result) {
 				if(!sparqlResult.getResourceResult().getURI().contains("wikidata")){
@@ -177,8 +242,8 @@ public class OntologicContextService implements ContextService{
 		//Where
 		mappedPredicates.add("dbo:country");
 		mappedPredicates.add("dbo:isPartOf");
-//		mappedPredicates.add("geo:lat");
-//		mappedPredicates.add("geo:long");
+		mappedPredicates.add("geo:lat");
+		mappedPredicates.add("geo:long");
 		
 		//When
 		mappedPredicates.add("dbo:foundingDate");

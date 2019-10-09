@@ -35,7 +35,7 @@ public class SparqlSearch {
     private final String DBO = "PREFIX dbo: <http://dbpedia.org/ontology/>";
     private final String GEO = "PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>";
     
-    private final String PREFIXES = OWL + XSD + RDFS + RDF + FOAF + DC + DB + DBPEDIA2 + DBPEDIA + SKOS + DBO + GEO;
+    private final String PREFIXES = OWL + XSD + RDFS + RDF + FOAF + DC + DB + DBPEDIA2 + DBPEDIA + DBO + GEO;
     
     private final String SERVICE = "SERVICE <http://DBpedia.org/sparql>";
     
