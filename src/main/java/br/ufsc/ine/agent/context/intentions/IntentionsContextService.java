@@ -69,8 +69,14 @@ public class IntentionsContextService implements ContextService {
 
 	@Override
 	public void appendFact(String c) {
+		boolean update = false;
 		try {
-			prologEnvironment.appendFact(c);
+			update = this.verify(c);
+			if (update) {
+				prologEnvironment.updateFact(c, c);
+			} else {
+				prologEnvironment.appendFact(c);
+			}
 		} catch (InvalidTheoryException e) {
 			e.printStackTrace();
 		}
