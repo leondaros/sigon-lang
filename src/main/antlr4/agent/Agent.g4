@@ -55,7 +55,7 @@ CUSTOMNAME :
 	'_'  ALPHA CHARACTER*
 ;
 plan
-	: 'plan' LeftParen somethingToBeTrue ',' compoundAction (',' planPreconditions ',' internalOperator? planPostconditions)? (',' cost)? RightParen '.'
+	: 'plan' LeftParen somethingToBeTrue ',' compoundAction (',' planPreconditions ',' internalOperator? planPostconditions)? (',' cost)? RightParen 
 	;
 
 
@@ -159,7 +159,7 @@ compoundAction
 
 
 plansFormulas
-	: ((plan  | action )) *
+	: ((plan   | action)'.') *
 	;
 
 
