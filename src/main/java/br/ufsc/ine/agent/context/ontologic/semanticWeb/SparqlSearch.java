@@ -29,7 +29,7 @@ public class SparqlSearch {
     private final String FOAF = "PREFIX foaf: <http://xmlns.com/foaf/0.1/>";
     private final String DC = "PREFIX dc: <http://purl.org/dc/elements/1.1/>";
     private final String DB = "PREFIX : <http://dbpedia.org/resource/>";
-    private final String DBPEDIA2 = "PREFIX dbpedia2: <http://dbpedia.org/property/>";
+    private final String DBPEDIA2 = "PREFIX dbp: <http://dbpedia.org/property/>";
     private final String DBPEDIA = "PREFIX dbpedia: <http://dbpedia.org/>";
     private final String SKOS = "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>";
     private final String DBO = "PREFIX dbo: <http://dbpedia.org/ontology/>";

@@ -6,6 +6,7 @@ import java.util.List;
 
 import alice.tuprolog.InvalidTheoryException;
 import alice.tuprolog.MalformedGoalException;
+import alice.tuprolog.NoSolutionException;
 import alice.tuprolog.SolveInfo;
 import alice.tuprolog.Theory;
 import br.ufsc.ine.agent.Agent;
@@ -73,16 +74,12 @@ public class OntologicContextService implements ContextService{
 				String filter = predicate == "rdf:type" ? "filter contains(str(?value),'http://dbpedia.org/ontology/')" : null;
 				List<SparqlResult> result = executeQuery("<"+subject+">", predicate, "?value", filter);
 				for (SparqlResult sr : result){
-					String newFact = formatPredicate(predicate)+"("+stringToOutputFormat(fact)+","+getObject(sr)+").";
+					String newFact = "knowledge("+formatPredicate(predicate)+","+stringToOutputFormat(fact)+","+getObject(sr)+").";
 					apprendToProlog(newFact);
 				}
 			}
 		}
 	}
-	
-//	public boolean unificationTest(){
-//		return prologEnvironment.getEngine().match(t0, t1);
-//	}
 	
 	public String getContent(String fact){
 		return fact.substring(fact.indexOf("(") + 1, fact.lastIndexOf(")"));
@@ -138,7 +135,7 @@ public class OntologicContextService implements ContextService{
 	
 	public boolean checkedResource(String resouce){
 		Theory theory = prologEnvironment.getEngine().getTheory();
-		boolean contains = theory.toString().contains("type("+resouce+",");
+		boolean contains = theory.toString().contains("type,"+resouce+",");
 		return contains;
 	}
 	
@@ -226,6 +223,7 @@ public class OntologicContextService implements ContextService{
 		//Where
 		mappedPredicates.add("dbo:country");
 		mappedPredicates.add("dbo:isPartOf");
+		mappedPredicates.add("dbo:birthPlace");
 		mappedPredicates.add("geo:lat");
 		mappedPredicates.add("geo:long");
 		
@@ -237,7 +235,10 @@ public class OntologicContextService implements ContextService{
 		
 		//What
 		mappedPredicates.add("foaf:nick");
+		
 		mappedPredicates.add("dbo:capital");
+		mappedPredicates.add("dbp:capital");
+		
 		mappedPredicates.add("dbo:currency");
 		mappedPredicates.add("dbo:officialLanguage");
 		mappedPredicates.add("dbo:largestCity");
@@ -291,6 +292,14 @@ public class OntologicContextService implements ContextService{
 
 	public void setMappedPredicates(List<String> mappedPredicates) {
 		this.mappedPredicates = mappedPredicates;
+	}
+
+	public static PrologEnvironment getPrologEnvironment() {
+		return prologEnvironment;
+	}
+
+	public static void setPrologEnvironment(PrologEnvironment prologEnvironment) {
+		OntologicContextService.prologEnvironment = prologEnvironment;
 	}
 	
 }
