@@ -71,14 +71,17 @@ public class OntologicContextService implements ContextService{
 			subject = "http://dbpedia.org/resource/"+fact;
 			removeNewResourceStatus(content);
 			for (String predicate : mappedPredicates) {
-				String filter = predicate == "rdf:type" ? "filter contains(str(?value),'http://dbpedia.org/ontology/')" : null;
-				List<SparqlResult> result = executeQuery("<"+subject+">", predicate, "?value", filter);
+				List<SparqlResult> result = executeQuery("<"+subject+">", predicate, "?value", getFilter(predicate));
 				for (SparqlResult sr : result){
 					String newFact = "knowledge("+formatPredicate(predicate)+","+stringToOutputFormat(fact)+","+getObject(sr)+").";
 					apprendToProlog(newFact);
 				}
 			}
 		}
+	}
+	
+	public String getFilter(String predicate){
+		return predicate == "rdf:type" ? "filter contains(str(?value),'http://dbpedia.org/ontology/')" : null;
 	}
 	
 	public String getContent(String fact){

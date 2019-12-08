@@ -1,4 +1,4 @@
-package br.ufsc.ine.agent.context.ontologic.actuators;
+package ontologicExperiment.actuators;
 
 import java.net.URISyntaxException;
 import java.util.List;
@@ -15,10 +15,11 @@ import br.ufsc.ine.utils.PrologEnvironment;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 
-public class ValidateAnswer extends Actuator{
-
+public class ValidateAnswer extends Actuator {
+	
 	@Override
 	public void act(List<String> args) {
+		System.out.println("validaaaaaaaaaaaaaa");
 		testKnowledge(args);
 	}
 	
@@ -55,5 +56,4 @@ public class ValidateAnswer extends Actuator{
 		socket.emit("questionResult", obj);
 		socket.connect();
 	}
-	
 }

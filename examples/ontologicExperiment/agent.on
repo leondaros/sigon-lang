@@ -1,0 +1,21 @@
+communication:
+    sensor("answerSensor", "ontologicExperiment.sensors.AnswerSensor").
+    actuator("buildQuestion", "ontologicExperiment.actuators.BuildQuestion").
+    actuator("validateAnswer", "ontologicExperiment.actuators.ValidateAnswer").
+
+beliefs:
+    
+desires:
+
+intentions:
+    questionAbout(malta).
+    
+! intentions questionAbout(X) :- _ontologic newResource(X) & communication sense(I).
+    
+_ontologic:
+
+! _ontologic question(X) :- intentions questionAbout(X) & communication sense(I).
+
+! communication buildQuestion(capital,Y,Z) :- _ontologic knowledge(capital,Y,Z) & communication sense(I).
+
+! communication validateAnswer(X,Y,Z,A) :- communication sense(X,Y,Z,A).
